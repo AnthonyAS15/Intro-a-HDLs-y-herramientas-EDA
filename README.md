@@ -7,9 +7,9 @@
 #### Profesor: Ing. Kaleb Alfaro Badilla
 
 #### Integrantes:
-1. Anthony Artavia
-2. Priscilla Campos
-3. Samuel Montenegro
+ Anthony Artavia
+ Priscilla Campos
+ Samuel Montenegro
 
 #### I Semestre 2024
 
