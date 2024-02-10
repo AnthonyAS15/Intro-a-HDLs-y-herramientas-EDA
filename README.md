@@ -1,4 +1,4 @@
-# Introducción-a-HDL-y-herramientas-EDA
+# Introducción-a-HDLs-y-herramientas-EDA
 
 
 #### Instituto Tecnológico de Costa Rica
@@ -8,7 +8,7 @@
 
 #### Integrantes:
 1. Anthony Artavia
-2. Priscila Zamora
+2. Priscilla Campos
 3. Samuel Montenegro
 
 #### I Semestre 2024
