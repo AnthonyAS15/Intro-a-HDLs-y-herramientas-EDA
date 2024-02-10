@@ -7,7 +7,10 @@
 #### Prof. M.Sc. Kaleb Alfaro Badilla
 #### Grupo 20
 
-#### Primer laboratorio del Taller de Diseño Digital.
+
+#### Primer laboratorio del Taller de Diseño Digital
+
+
 
 #### Integrantes:
  Anthony Artavia
@@ -15,6 +18,7 @@
  Priscilla Campos
  
  Samuel Montenegro
+
 
 #### I Semestre 2024
 
