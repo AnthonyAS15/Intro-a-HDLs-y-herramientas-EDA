@@ -9,8 +9,7 @@
 #### Integrantes:
 1. Anthony Artavia
 2. Priscila Zamora
-3. Suarez Sarmiento Javier
-4. Samuel Montenegro
+3. Samuel Montenegro
 
 #### I Semestre 2024
 
