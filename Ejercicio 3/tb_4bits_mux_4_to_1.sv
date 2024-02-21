@@ -12,7 +12,7 @@ initial begin
 
 for (int i = 0; i < 50; i++) begin
 
-s = $urandom_range(1, 0);
+s = $urandom_range(3, 0);
 d0 = $urandom_range(15, 0);
 d1 = $urandom_range(15, 0);
 d2 = $urandom_range(15, 0);
