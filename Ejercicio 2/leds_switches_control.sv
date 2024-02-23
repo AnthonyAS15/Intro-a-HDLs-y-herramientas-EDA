@@ -1,5 +1,7 @@
 // activación por grupos de leds a través de switches gobernados por un push button
 
+`timescale 1ns/1ps
+
 module sw_led(input logic sw0, sw1, sw2, sw3, sw4, sw5, sw6, sw7, sw8, sw9, sw10, sw11, sw12, sw13, sw14, sw15,
 output logic led0, led1, led2, led3, led4, led5, led6, led7, led8, led9, led10, led11, led12, led13, led14, led15);
 
