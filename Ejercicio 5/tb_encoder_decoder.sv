@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb__encoder_decoder();
+module tb_encoder_decoder();
 
 reg [3:0] binary_input;
 wire [3:0] binary_output;
