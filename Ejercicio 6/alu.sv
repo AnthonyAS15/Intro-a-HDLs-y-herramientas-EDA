@@ -1,306 +1,301 @@
-//alu parametrizable de n bits. Recibirá dos entradas de n bits y un bus de control
+//alu parametrizable de n bits. Recibirá dos entradas de n bits y un bus de ALUControl
 
 `timescale 1ns/1ps
+
+typedef struct {logic C; logic Z;} ALUFlagsStruct; //Estructura para almacenar las banderas de salida.
 
 module alu #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    input logic [3:0] Control,
-    output logic [n-1:0] Result,
-    output logic Cout, Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    input logic [3:0] ALUControl,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    case (Control)
-        4'b0000:
-            and #(n) AND(.A(A),.B(B),.Result(Result),.Z(Z)); //Operación lógica AND
-        4'b0001:
-            or #(n) OR(.A(A),.B(B),.Result(Result),.Z(Z)); //Operación lógica OR
-        4'b0010:
-            add #(n) ADD(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Cout(Cout),.Z(Z)); //Suma
-        4'b0011:
-            inc #(n) INC(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Z(Z)); //Incrementar en uno
-        4'b0100:
-            dec #(n) DEC(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Z(Z)); //Decrementar en uno
-        4'b0101:
-            not #(n) NOT(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Z(Z)); //Operación lógica NOT
-        4'b0110:
-            sub #(n) SUB(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Cout(Cout),.Z(Z)); //Resta
-        4'b0111:
-            xor #(n) XOR (.A(A),.B(B),.Result(Result),.Z(Z)); //Operación lógica XOR
-        4'b1000:
-            sl #(n) SL(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Cout(Cout),.Z(Z)); //Desplazamiento hacia la izquierda
-        4'b1001:
-            sr #(n) SR(.A(A),.B(B),.FlagIn(FlagIn),.Result(Result),.Cout(Cout),.Z(Z)); //Desplazamiento hacia la derecha
-    endcase
+    Mand #(n) AND(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica AND
+    Mor #(n) OR(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica OR
+    Madd #(n) ADD(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Suma
+    Minc #(n) INC(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Incrementar en uno
+    Mdec #(n) DEC(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Decrementar en uno
+    Mnot #(n) NOT(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica NOT
+    Msub #(n) SUB(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Resta
+    Mxor #(n) XOR (.ALUA(ALUA),.ALUB(ALUB),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica XOR
+    Msl #(n) SL(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Desplazamiento hacia la izquierda
+    Msr #(n) SR(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Desplazamiento hacia la derecha
+   
 endmodule
 
-module and #( //Módulo para hacer AND entre dos entradas
+module Mand #( //Módulo para hacer AND entre dos entradas
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    output logic [n-1:0] Result,
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    assign Result = A & B;
-
+    assign ALUResult = ALUA & ALUB;
+    
     always_comb
     begin
-        if (Result == 0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 
 endmodule
 
-module or #( //Módulo para hacer OR entre dos entradas
+module Mor #( //Módulo para hacer OR entre dos entradas
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    output logic [n-1:0] Result
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    assign Result = A | B;
+    assign ALUResult = ALUA | ALUB;
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 
 endmodule
 
-module add #( //Módulo para sumar dos entradas y un acarreo
+module Madd #( //Módulo para sumar dos entradas y un acarreo
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output logic [n-1:0]  Result, 
-    output logic Cout, Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0]  ALUResult, 
+    output ALUFlagsStruct ALUFlags
 );
-    assign {Cout, Result} = A + B + FlagIn;
+    assign {ALUFlags.C, ALUResult} = ALUA + ALUB + ALUFlagIn;
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 
 endmodule
 
-module inc #( //Módulo para incrementar en uno 
+module Minc #( //Módulo para incrementar en uno 
 n = 4) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output logic [n-1:0] Result,
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
     always_comb
     begin
-        if (!FlagIn)
+        if (!ALUFlagIn)
         begin
-            Result = A + n'b1;
+            ALUResult = ALUA + 1;
         end
         else
         begin
-            Result = B + n'b1;
+            ALUResult = ALUB + 1;
         end
 
     end
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 
 endmodule
 
-module dec #(
+module Mdec #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output logic [n-1:0] Result,
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
     always_comb
     begin
-        if (!FlagIn)
+        if (!ALUFlagIn)
         begin
-            Result = A - n'b1;
+            ALUResult = ALUA - 1;
         end
         else
         begin
-            Result = B - n'b1;
+            ALUResult = ALUB - 1;
         end
     end
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 
 endmodule
 
-module not #(
+module Mnot #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output [n-1:0] logic Result,
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
     always_comb
     begin
-        if (!FlagIn)
+        if (!ALUFlagIn)
         begin
-            Result = ~A;
+            ALUResult = ~ALUA;
         end
         else
         begin
-            Result = ~B;
+            ALUResult = ~ALUB;
         end
     end
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
-        end
-    end
-endmodule
-
-module sub #(
-    n = 4
-) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output [n-1:0] logic Result,
-    output logic Cout, Z
-);
-    assign {Cout, Result} = A - B + FlagIn;
-
-    always_comb
-    begin
-        if (Result == n'b0)
-        begin
-            Z = 1'b1;
-        end
-        else
-        begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 endmodule
 
-module xor #(
+module Msub #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    output logic [n-1:0] Result,
-    output logic Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    assign Result = A ^ B;
+    assign {ALUFlags.C, ALUResult} = ALUA - ALUB + ALUFlagIn;
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 endmodule
 
-module sl #(
+module Mxor #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output logic [n-1:0] Result,
-    output logic Cout, Z
+    input logic [n-1:0] ALUA, ALUB,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    logic [B-1:0] filler;
-
-    assign filler = {B{FlagIn}};
-
-    assign Result = {filler, A[n-B-1:0]};
+    assign ALUResult = ALUA ^ ALUB;
 
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+            ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
         end
     end
 endmodule
 
-module sr #(
+module Msl #(
     n = 4
 ) (
-    input logic [n-1:0] A, B,
-    input logic FlagIn,
-    output logic [n-1:0] Result,
-    output logic Cout, Z
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
 );
-    logic [B-1:0] filler;
+    logic [ALUB-1:0] filler;
 
-    assign filler = {B{FlagIn}};
+    assign filler = {ALUB{ALUFlagIn}};
 
-    assign Result = {A[n-1:B-1], filler};
-
+    assign ALUResult = {filler, ALUA[n-ALUB-1:0]};
+    
+    assign ALUFlags.C = ALUA[n-ALUB-1];
+    
     always_comb
     begin
-        if (Result == n'b0)
+        if (ALUResult == 0)
         begin
-            Z = 1'b1;
+           ALUFlags.Z = 1'b1;
         end
         else
         begin
-            Z = 1'b0;
+            ALUFlags.Z = 1'b0;
+        end
+    end
+endmodule
+
+module Msr #(
+    n = 4
+) (
+    input logic [n-1:0] ALUA, ALUB,
+    input logic ALUFlagIn,
+    output logic [n-1:0] ALUResult,
+    output ALUFlagsStruct ALUFlags
+);
+    logic [ALUB-1:0] filler;
+
+    assign filler = {ALUB{ALUFlagIn}};
+
+    assign ALUResult = {ALUA[n-1:ALUB-1], filler};
+
+    assign ALUFlags.C = ALUA[ALUB-1];
+    
+    always_comb
+    begin
+        if (ALUResult == 0)
+        begin
+            ALUFlags.Z = 1'b1;
+        end
+        else
+        begin
+            ALUFlags.Z = 1'b0;
         end
     end
 endmodule
