@@ -13,6 +13,7 @@ module alu #(
     output logic [n-1:0] ALUResult,
     output ALUFlagsStruct ALUFlags
 );
+    
     Mand #(n) AND(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica AND
     Mor #(n) OR(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Operación lógica OR
     Madd #(n) ADD(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(ALUResult),.ALUFlags(ALUFlags)); //Suma
@@ -249,14 +250,23 @@ module Msl #(
     input logic ALUFlagIn,
     output logic [n-1:0] ALUResult,
     output ALUFlagsStruct ALUFlags
-);
-    logic [ALUB-1:0] filler;
-
-    assign filler = {ALUB{ALUFlagIn}};
-
-    assign ALUResult = {filler, ALUA[n-ALUB-1:0]};
+);  
+    logic [n-1:0] counter = 0;
+    assign ALUResult = ALUA;
     
-    assign ALUFlags.C = ALUA[n-ALUB-1];
+    always_comb
+    begin
+        if(!(counter == ALUB))
+        begin
+            ALUFlags.Cout  = ALUA[n-1];
+            ALUResult = {ALUResult[n-2:0],ALUFlagIn};
+            counter = counter + 1;
+        end
+        else
+        begin
+            counter = 0;
+        end
+    end
     
     always_comb
     begin
@@ -279,13 +289,23 @@ module Msr #(
     output logic [n-1:0] ALUResult,
     output ALUFlagsStruct ALUFlags
 );
-    logic [ALUB-1:0] filler;
-
-    assign filler = {ALUB{ALUFlagIn}};
-
-    assign ALUResult = {ALUA[n-1:ALUB-1], filler};
-
-    assign ALUFlags.C = ALUA[ALUB-1];
+    logic [n-1:0] counter = 0;
+    assign ALUResult = ALUA;
+    
+    always_comb
+    begin
+        if(!(counter == ALUB))
+        begin
+            ALUFlags.Cout = ALUA[0];
+            ALUResult = {ALUFlagIn,ALUResult[n-1:1]};
+            counter = counter + 1;
+        end
+        else
+        begin
+            
+            counter = 0;
+        end
+    end
     
     always_comb
     begin
