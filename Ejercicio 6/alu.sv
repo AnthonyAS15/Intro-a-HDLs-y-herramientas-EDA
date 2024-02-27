@@ -1,4 +1,4 @@
-//alu parametrizable de n bits. Recibir谩 dos entradas de n bits y un bus de ALUControl
+//alu parametrizable de n bits. Recibir谩 dos entradas de n bits un bus de ALUControl y una bandera de entrada
 
 `timescale 1ns/1ps
 
@@ -17,10 +17,10 @@ module alu #(
     logic [n-1:0] Result0, Result1, Result2, Result3, Result4, Result5, Result6, Result7, Result8, Result9;
     //Banderas de salida de cada una de las operaciones
     ALUFlagsStruct ALUFlags0, ALUFlags1, ALUFlags2, ALUFlags3, ALUFlags4, ALUFlags5, ALUFlags6, ALUFlags7, ALUFlags8, ALUFlags9;
-    //Se馻l de control para el multiplexor que tiene como salida a ALUFlags.C
+    //Se帽al de control para el multiplexor que tiene como salida a ALUFlags.C
     logic [1:0] c_signal;
     
-    //M骴ulos de las operaciones
+    //M贸dulos de las operaciones
     Mand #(n) AND(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(Result0),.ALUFlags(ALUFlags0)); //Operaci贸n l贸gica AND
     Mor #(n) OR(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(Result1),.ALUFlags(ALUFlags1)); //Operaci贸n l贸gica OR
     Madd #(n) ADD(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(Result2),.ALUFlags(ALUFlags2)); //Suma
@@ -33,22 +33,22 @@ module alu #(
     Msr #(n) SR(.ALUA(ALUA),.ALUB(ALUB),.ALUFlagIn(ALUFlagIn),.ALUResult(Result9),.ALUFlags(ALUFlags9)); //Desplazamiento hacia la derecha
     
     //Multiplexor para obtener ALUResult
-    mux_10_to_1 #(n) MUXR(.I0(Result0),.I1(Result1),.I2(Result2),.I3(Result3),.I4(Result4),.I5(Result5),.I6(Result6),.I7(Result7),.I8(Result8),.I9(Result9),.ALUControl(ALUControl),.Result(ALUResult));
+    mux_10_to_1 #(n) MUXR(.I0(Result0),.I1(Result1),.I2(Result2),.I3(Result3),.I4(Result4),.I5(Result5),.I6(Result6),.I7(Result7),.I8(Result8),.I9(Result9),.Control(ALUControl),.Result(ALUResult));
     
     //Multiplexor para obtener ALUFlags.Z
-    mux_10_to_1 #(n) MUXZ(.I0(ALUFlags0.Z),.I1(ALUFlags1.Z),.I2(ALUFlags2.Z),.I3(ALUFlags3.Z),.I4(ALUFlags4.Z),.I5(ALUFlags5.Z),.I6(ALUFlags6.Z),.I7(ALUFlags7.Z),.I8(ALUFlags8.Z),.I9(ALUFlags9.Z),.ALUControl(ALUControl),.Result(ALUFlags.Z));
+    mux_10_to_1 #(n) MUXZ(.I0(ALUFlags0.Z),.I1(ALUFlags1.Z),.I2(ALUFlags2.Z),.I3(ALUFlags3.Z),.I4(ALUFlags4.Z),.I5(ALUFlags5.Z),.I6(ALUFlags6.Z),.I7(ALUFlags7.Z),.I8(ALUFlags8.Z),.I9(ALUFlags9.Z),.Control(ALUControl),.Result(ALUFlags.Z));
     
-    //Determinar la se馻l de control para el multiplexor que tiene como salida a ALUFlags.C
+    //Determinar la se帽al de control para el multiplexor que tiene como salida a ALUFlags.C
     always_comb
     begin
         case(ALUControl)
-            4'h2:
+            4'h2: //Para la suma
                 c_signal = 2'b00;
-            4'h6:
+            4'h6: //Para la resta
                 c_signal = 2'b01;
-            4'h8:
+            4'h8: //Para el corrimiento hacia la izquierda
                 c_signal = 2'b10;
-            4'h9:
+            4'h9: //Para el corrimiento hacia la derecha
                 c_signal = 2'b11;
         endcase
     end
@@ -164,7 +164,7 @@ n = 4) (
 
 endmodule
 
-module Mdec #(
+module Mdec #( //M贸dulo para decrementar en uno 
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
@@ -198,7 +198,7 @@ module Mdec #(
 
 endmodule
 
-module Mnot #(
+module Mnot #( //M贸dulo para hacer NOT a una entrada 
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
@@ -231,7 +231,7 @@ module Mnot #(
     end
 endmodule
 
-module Msub #(
+module Msub #( //M贸dulo para restar dos entradas y un acarreo 
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
@@ -256,7 +256,7 @@ module Msub #(
     end
 endmodule
 
-module Mxor #(
+module Mxor #( //M贸dulo para hacer XOR entre dos entradas
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
@@ -278,7 +278,7 @@ module Mxor #(
     end
 endmodule
 
-module Msl #(
+module Msl #( //M贸dulo para hacer un desplazamiento hacia la izquierda
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
@@ -316,7 +316,7 @@ module Msl #(
     end
 endmodule
 
-module Msr #(
+module Msr #( //M贸dulo para hacer un desplazamiento hacia la derecha
     n = 4
 ) (
     input logic [n-1:0] ALUA, ALUB,
