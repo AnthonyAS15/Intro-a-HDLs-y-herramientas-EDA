@@ -1,4 +1,4 @@
-// mux 4:1 parametrizado para un ancho de datos "n" de entrada y salida variable
+// multiplexor de 4 a 1 para obtener la bandera de salida C
 
 `timescale 1ns/1ps
 
