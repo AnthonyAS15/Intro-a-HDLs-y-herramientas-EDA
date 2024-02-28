@@ -17,8 +17,6 @@ module alu #(
     logic [n-1:0] Result0, Result1, Result2, Result3, Result4, Result5, Result6, Result7, Result8, Result9;
     //Banderas de salida de cada una de las operaciones
     ALUFlagsStruct ALUFlags0, ALUFlags1, ALUFlags2, ALUFlags3, ALUFlags4, ALUFlags5, ALUFlags6, ALUFlags7, ALUFlags8, ALUFlags9;
-    //Señal de control para el multiplexor que tiene como salida a ALUFlags.C
-    logic [1:0] c_signal;
     
     //Módulos de las operaciones
     Mand #(n) AND(.ALUA(ALUA),.ALUB(ALUB),.ALUResult(Result0),.ALUFlags(ALUFlags0)); //Operación lógica AND
@@ -36,25 +34,10 @@ module alu #(
     mux_10_to_1 #(n) MUXR(.I0(Result0),.I1(Result1),.I2(Result2),.I3(Result3),.I4(Result4),.I5(Result5),.I6(Result6),.I7(Result7),.I8(Result8),.I9(Result9),.Control(ALUControl),.Result(ALUResult));
     
     //Multiplexor para obtener ALUFlags.Z
-    mux_10_to_1 #(n) MUXZ(.I0(ALUFlags0.Z),.I1(ALUFlags1.Z),.I2(ALUFlags2.Z),.I3(ALUFlags3.Z),.I4(ALUFlags4.Z),.I5(ALUFlags5.Z),.I6(ALUFlags6.Z),.I7(ALUFlags7.Z),.I8(ALUFlags8.Z),.I9(ALUFlags9.Z),.Control(ALUControl),.Result(ALUFlags.Z));
-    
-    //Determinar la señal de control para el multiplexor que tiene como salida a ALUFlags.C
-    always_comb
-    begin
-        case(ALUControl)
-            4'h2: //Para la suma
-                c_signal = 2'b00;
-            4'h6: //Para la resta
-                c_signal = 2'b01;
-            4'h8: //Para el corrimiento hacia la izquierda
-                c_signal = 2'b10;
-            4'h9: //Para el corrimiento hacia la derecha
-                c_signal = 2'b11;
-        endcase
-    end
+    mux_10_to_1 #(1) MUXZ(.I0(ALUFlags0.Z),.I1(ALUFlags1.Z),.I2(ALUFlags2.Z),.I3(ALUFlags3.Z),.I4(ALUFlags4.Z),.I5(ALUFlags5.Z),.I6(ALUFlags6.Z),.I7(ALUFlags7.Z),.I8(ALUFlags8.Z),.I9(ALUFlags9.Z),.Control(ALUControl),.Result(ALUFlags.Z));
     
     //Multiplexor para obtener ALUFlags.C
-    mux_4_to_1 #(n) MUXC(.d0(ALUFlags2.C),.d1(ALUFlags6.C),.d2(ALUFlags8.C),.d3(ALUFlags9.C),.s(c_signal),.y(ALUFlags.C));
+    mux_10_to_1 #(1) MUXC(.I0(ALUFlags0.C),.I1(ALUFlags1.C),.I2(ALUFlags2.C),.I3(ALUFlags3.C),.I4(ALUFlags4.C),.I5(ALUFlags5.C),.I6(ALUFlags6.C),.I7(ALUFlags7.C),.I8(ALUFlags8.C),.I9(ALUFlags9.C),.Control(ALUControl),.Result(ALUFlags.C));
     
 endmodule
 
@@ -112,9 +95,7 @@ module Madd #( //Módulo para sumar dos entradas y un acarreo
     output logic [n-1:0]  ALUResult, 
     output ALUFlagsStruct ALUFlags
 );  
-    logic [n:0] sum = ALUA + ALUB + ALUFlagIn;
-    assign ALUFlags.C = sum[n];
-    assign ALUResult = sum[n-1:0];
+    assign {ALUFlags.C, ALUResult} = ALUA + ALUB + ALUFlagIn;
 
     always_comb
     begin
@@ -141,11 +122,11 @@ n = 4) (
     begin
         if (!ALUFlagIn)
         begin
-            ALUResult = ALUA + 1;
+            ALUResult = ALUA + 1'b1;
         end
         else
         begin
-            ALUResult = ALUB + 1;
+            ALUResult = ALUB + 1'b1;
         end
 
     end
@@ -176,11 +157,11 @@ module Mdec #( //Módulo para decrementar en uno
     begin
         if (!ALUFlagIn)
         begin
-            ALUResult = ALUA - 1;
+            ALUResult = ALUA - 1'b1;
         end
         else
         begin
-            ALUResult = ALUB - 1;
+            ALUResult = ALUB - 1'b1;
         end
     end
 
@@ -239,9 +220,7 @@ module Msub #( //Módulo para restar dos entradas y un acarreo
     output logic [n-1:0] ALUResult,
     output ALUFlagsStruct ALUFlags
 );
-    logic [n:0] sum = ALUA - ALUB + ALUFlagIn;
-    assign ALUFlags.C = sum[n];
-    assign ALUResult = sum[n-1:0];
+    assign {ALUFlags.C, ALUResult} = ALUA - ALUB + ALUFlagIn;
 
     always_comb
     begin
@@ -287,24 +266,20 @@ module Msl #( //Módulo para hacer un desplazamiento hacia la izquierda
     output ALUFlagsStruct ALUFlags
 );  
     logic [n-1:0] counter = 0;
-    assign ALUResult = ALUA;
+    logic [n-1:0] semiresult = ALUA;
     
     always_comb
     begin
-        if(!(counter == ALUB))
-        begin
-            ALUFlags.Cout  = ALUA[n-1];
-            ALUResult = {ALUResult[n-2:0],ALUFlagIn};
-            counter = counter + 1;
-        end
-        else
+        if(counter >= ALUB)
         begin
             counter = 0;
         end
-    end
-    
-    always_comb
-    begin
+        else
+        begin
+            ALUFlags.C  = ALUA[n-1];
+            semiresult = {semiresult[n-2:0],ALUFlagIn};
+            counter = counter + 1'b1;
+        end
         if (ALUResult == 0)
         begin
            ALUFlags.Z = 1'b1;
@@ -314,6 +289,7 @@ module Msl #( //Módulo para hacer un desplazamiento hacia la izquierda
             ALUFlags.Z = 1'b0;
         end
     end
+    assign ALUResult = semiresult;
 endmodule
 
 module Msr #( //Módulo para hacer un desplazamiento hacia la derecha
@@ -325,25 +301,20 @@ module Msr #( //Módulo para hacer un desplazamiento hacia la derecha
     output ALUFlagsStruct ALUFlags
 );
     logic [n-1:0] counter = 0;
-    assign ALUResult = ALUA;
+    logic [n-1:0] semiresult = ALUA;
     
     always_comb
     begin
-        if(!(counter == ALUB))
+        if(counter >= ALUB)
         begin
-            ALUFlags.Cout = ALUA[0];
-            ALUResult = {ALUFlagIn,ALUResult[n-1:1]};
-            counter = counter + 1;
+            counter = 0;
         end
         else
         begin
-            
-            counter = 0;
+            ALUFlags.C = ALUA[0];
+            semiresult = {ALUFlagIn,semiresult[n-1:1]};
+            counter = counter + 1'b1;
         end
-    end
-    
-    always_comb
-    begin
         if (ALUResult == 0)
         begin
             ALUFlags.Z = 1'b1;
@@ -353,4 +324,5 @@ module Msr #( //Módulo para hacer un desplazamiento hacia la derecha
             ALUFlags.Z = 1'b0;
         end
     end
+    assign ALUResult = semiresult;
 endmodule
